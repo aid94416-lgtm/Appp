@@ -1,916 +1,210 @@
-```react
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import {
-  Eye,
-  EyeOff,
-  QrCode,
-  Send,
-  ArrowDownLeft,
-  CreditCard,
-  Barcode,
-  Smartphone,
-  PiggyBank,
-  TrendingUp,
-  ShoppingBag,
-  Home,
-  DollarSign,
-  Bell,
-  User,
-  ChevronRight,
-  X,
-  CheckCircle2,
-  Lock,
-  Unlock,
-  Plus,
-  ArrowUpRight,
-  ShieldAlert,
-  Wallet,
-  Sparkles,
-  HelpCircle,
-  Percent,
-  Search,
-  Copy,
-  Check,
-  AlertCircle,
-  Trash2,
-  Bitcoin,
-  Tag,
-  ExternalLink,
-  ShieldCheck,
-  Layers,
-  Heart,
-  SlidersHorizontal,
-  Edit2
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nubank Natan</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- React & React DOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Babel -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
 
-const INITIAL_BALANCE = 5000.00;
-const INITIAL_CREDIT_LIMIT = 10000.00;
-const INITIAL_CREDIT_USED = 1250.00;
-const PRE_APPROVED_LOAN = 25000.00;
+<body class="bg-zinc-950 text-white">
+  <div id="root"></div>
 
-const INITIAL_CARDS = [
-  {
-    id: 'card-phys',
-    name: 'Cartão Físico Black',
-    type: 'físico',
-    number: '5412 •••• •••• 9012',
-    fullNumber: '5412 3890 1234 9012',
-    expiry: '11/31',
-    cvv: '891',
-    locked: false,
-    limit: 10000,
-    color: 'from-zinc-900 via-zinc-800 to-black',
-    tag: 'Ultravioleta'
-  },
-  {
-    id: 'card-virt-1',
-    name: 'Cartão Virtual Online',
-    type: 'virtual',
-    number: '4221 •••• •••• 4410',
-    fullNumber: '4221 8812 9011 4410',
-    expiry: '08/29',
-    cvv: '312',
-    locked: false,
-    limit: 5000,
-    color: 'from-[#820AD1] to-[#5B0099]',
-    tag: 'Recorrente'
-  },
-  {
-    id: 'card-ghost',
-    name: 'Cartão Fantasma (1 Compra)',
-    type: 'temporario',
-    number: '4000 •••• •••• 0099',
-    fullNumber: '4000 1122 3344 0099',
-    expiry: '12/26',
-    cvv: '991',
-    locked: false,
-    limit: 1000,
-    color: 'from-amber-600 to-rose-700',
-    tag: 'Descartável'
-  }
-];
+  <script type="text/babel">
+    const { useState, useEffect } = React;
 
-const INITIAL_CAIXINHAS = [
-  { id: 1, name: 'Reserva de Emergência', balance: 5000.00, cdiPercent: 100, goal: 15000, icon: 'ShieldCheck' },
-  { id: 2, name: 'Viagem dos Sonhos', balance: 2500.00, cdiPercent: 102, goal: 8000, icon: 'Sparkles' },
-  { id: 3, name: 'Novo Computador', balance: 1200.00, cdiPercent: 100, goal: 6000, icon: 'Smartphone' },
-];
-
-const INITIAL_CRYPTO = [
-  { id: 'btc', name: 'Bitcoin', symbol: 'BTC', balance: 0.005, price: 380000.00, change: +5.4, chart: [330, 332, 338, 335, 342, 380] },
-  { id: 'eth', name: 'Ethereum', symbol: 'ETH', balance: 0.05, price: 21000.00, change: +2.1, chart: [19.2, 19.0, 18.7, 18.8, 21.0] },
-  { id: 'nu', name: 'Nucoin', symbol: 'NUC', balance: 2500.00, price: 0.12, change: +24.0, chart: [0.07, 0.075, 0.08, 0.088, 0.12] }
-];
-
-const SHOPPING_STORES = [
-  { id: 1, name: 'Magazine Luiza', category: 'Eletrônicos & Casa', cashback: 8, logoBg: 'bg-blue-600', deal: 'Até 8% de dinheiro de volta' },
-  { id: 2, name: 'Casas Bahia', category: 'Eletrodomésticos', cashback: 10, logoBg: 'bg-red-600', deal: 'Cupom R$50 + 10% cashback' },
-  { id: 3, name: 'Amazon Brasil', category: 'Livros & Tec', cashback: 6, logoBg: 'bg-amber-500', deal: '6% de retorno direto no app' },
-  { id: 4, name: 'AliExpress', category: 'Importados', cashback: 12, logoBg: 'bg-orange-500', deal: 'Super ofertas com 12% cashback' },
-  { id: 5, name: 'iFood', category: 'Delivery', cashback: 7, logoBg: 'bg-rose-600', deal: '7% em todas as refeições' },
-  { id: 6, name: 'Netshoes', category: 'Esportes', cashback: 9, logoBg: 'bg-zinc-900', deal: '9% em artigos esportivos' }
-];
-
-const INITIAL_TRANSACTIONS = [
-  { id: 101, type: 'pix_received', title: 'Pix recebido de Carlos M.', value: 1500.00, date: 'Hoje, 14:32', category: 'Pix', status: 'Concluído', receiptId: 'E12345678901' },
-  { id: 102, type: 'card_buy', title: 'Supermercado Pão de Açúcar', value: 215.40, date: 'Ontem, 18:45', category: 'Cartão de Crédito', status: 'Processado', receiptId: 'E12345678902' },
-  { id: 103, type: 'payment', title: 'Pagamento de Boleto - Enel', value: 128.30, date: '04 Out', category: 'Conta de Luz', status: 'Concluído', receiptId: 'E12345678903' },
-  { id: 104, type: 'yield', title: 'Rendimento Caixinha Reserva', value: 12.40, date: '01 Out', category: 'Rendimento', status: 'Concluído', receiptId: 'E12345678904' },
-];
-
-const formatBRL = (val) => {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
-};
-
-export default function App() {
-  const [userName, setUserName] = useState('Natan');
-  const [darkMode, setDarkMode] = useState(true);
-  const [showBalance, setShowBalance] = useState(true);
-  const [activeTab, setActiveTab] = useState('home');
-  const [toastMessage, setToastMessage] = useState(null);
-  
-  // Financial State
-  const [balance, setBalance] = useState(INITIAL_BALANCE);
-  const [creditLimit, setCreditLimit] = useState(INITIAL_CREDIT_LIMIT);
-  const [adjustedLimit, setAdjustedLimit] = useState(INITIAL_CREDIT_LIMIT);
-  const [creditUsed, setCreditUsed] = useState(INITIAL_CREDIT_USED);
-  const [caixinhas, setCaixinhas] = useState(INITIAL_CAIXINHAS);
-  const [cryptoList, setCryptoList] = useState(INITIAL_CRYPTO);
-  const [cards, setCards] = useState(INITIAL_CARDS);
-  const [transactions, setTransactions] = useState(INITIAL_TRANSACTIONS);
-  const [preApprovedLoan, setPreApprovedLoan] = useState(PRE_APPROVED_LOAN);
-
-  // Custom Money Inputs
-  const [customBalanceInput, setCustomBalanceInput] = useState('');
-  const [customLimitInput, setCustomLimitInput] = useState('');
-  const [customInvoiceInput, setCustomInvoiceInput] = useState('');
-  const [customUserNameInput, setCustomUserNameInput] = useState('Natan');
-
-  // Modals & PIN
-  const [activeModal, setActiveModal] = useState(null); 
-  const [pinInput, setPinInput] = useState(['', '', '', '']);
-  const [pendingAction, setPendingAction] = useState(null);
-
-  // Modal State
-  const [modalStep, setModalStep] = useState(1);
-  const [amountInput, setAmountInput] = useState('');
-  const [pixKeyInput, setPixKeyInput] = useState('');
-  const [selectedTx, setSelectedTx] = useState(null);
-  const [selectedStore, setSelectedStore] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const showToast = (msg) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 3500);
-  };
-
-  const triggerPinCheck = (actionCallback) => {
-    setPendingAction(() => actionCallback);
-    setPinInput(['', '', '', '']);
-    setActiveModal('pin_lock');
-  };
-
-  const handlePinDigit = (digit) => {
-    const emptyIdx = pinInput.findIndex(val => val === '');
-    if (emptyIdx !== -1) {
-      const newPin = [...pinInput];
-      newPin[emptyIdx] = digit;
-      setPinInput(newPin);
-
-      if (emptyIdx === 3) {
-        setTimeout(() => {
-          setActiveModal(null);
-          if (pendingAction) pendingAction();
-          setPendingAction(null);
-        }, 200);
-      }
-    }
-  };
-
-  const closeModal = () => {
-    setActiveModal(null);
-    setModalStep(1);
-    setAmountInput('');
-    setPixKeyInput('');
-    setSelectedStore(null);
-    setSearchQuery('');
-  };
-
-  const addTransaction = (type, title, value, category) => {
-    const newTx = {
-      id: Date.now(),
-      type,
-      title,
-      value: parseFloat(value),
-      date: 'Hoje, ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      category,
-      status: 'Concluído',
-      receiptId: 'E' + Math.floor(100000000000 + Math.random() * 900000000000)
+    const Icon = ({ name, className }) => {
+      useEffect(() => {
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+      }, [name]);
+      return <i data-lucide={name} className={className}></i>;
     };
-    setTransactions(prev => [newTx, ...prev]);
-  };
 
-  const openBalanceEditModal = () => {
-    setCustomBalanceInput(balance.toString());
-    setCustomLimitInput(adjustedLimit.toString());
-    setCustomInvoiceInput(creditUsed.toString());
-    setCustomUserNameInput(userName);
-    setActiveModal('edit_money');
-  };
+    const INITIAL_BALANCE = 5000.00;
+    const INITIAL_CREDIT_LIMIT = 10000.00;
+    const INITIAL_CREDIT_USED = 1250.00;
 
-  const handleSaveCustomMoney = () => {
-    if (customUserNameInput.trim()) {
-      setUserName(customUserNameInput.trim());
-    }
-    if (customBalanceInput !== '') {
-      setBalance(parseFloat(customBalanceInput) || 0);
-    }
-    if (customLimitInput !== '') {
-      const newLimit = parseFloat(customLimitInput) || 0;
-      setCreditLimit(newLimit);
-      setAdjustedLimit(newLimit);
-    }
-    if (customInvoiceInput !== '') {
-      setCreditUsed(parseFloat(customInvoiceInput) || 0);
-    }
-    showToast('Valores atualizados com sucesso, Natan!');
-    closeModal();
-  };
+    const INITIAL_CARDS = [
+      { id: 'card-phys', name: 'Cartão Físico Black', number: '5412 •••• •••• 9012', expiry: '11/31', color: 'from-zinc-900 via-zinc-800 to-black' },
+      { id: 'card-virt-1', name: 'Cartão Virtual Online', number: '4221 •••• •••• 4410', expiry: '08/29', color: 'from-[#820AD1] to-[#5B0099]' }
+    ];
 
-  const handlePixSendConfirmed = () => {
-    const numVal = parseFloat(amountInput);
-    if (!numVal || numVal <= 0) return;
-    if (numVal > balance) {
-      alert('Saldo insuficiente para realizar este Pix.');
-      return;
-    }
+    const INITIAL_TRANSACTIONS = [
+      { id: 101, type: 'pix_received', title: 'Pix recebido de Carlos M.', value: 1500.00, date: 'Hoje, 14:32' },
+      { id: 102, type: 'card_buy', title: 'Supermercado Pão de Açúcar', value: 215.40, date: 'Ontem, 18:45' },
+      { id: 103, type: 'payment', title: 'Pagamento de Boleto - Enel', value: 128.30, date: '04 Out' }
+    ];
 
-    triggerPinCheck(() => {
-      setBalance(prev => prev - numVal);
-      addTransaction('pix_sent', `Pix enviado para ${pixKeyInput || 'Chave Pix'}`, numVal, 'Pix');
-      showToast(`Pix de ${formatBRL(numVal)} enviado com sucesso!`);
-      closeModal();
-    });
-  };
+    const formatBRL = (val) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
 
-  const handlePayInvoice = () => {
-    if (creditUsed <= 0) {
-      showToast('Sua fatura já está zerada!');
-      return;
-    }
-    if (balance < creditUsed) {
-      alert('Saldo em conta insuficiente para quitar a fatura inteira.');
-      return;
-    }
+    function App() {
+      const [userName, setUserName] = useState('Natan');
+      const [showBalance, setShowBalance] = useState(true);
+      const [balance, setBalance] = useState(INITIAL_BALANCE);
+      const [creditLimit, setCreditLimit] = useState(INITIAL_CREDIT_LIMIT);
+      const [creditUsed, setCreditUsed] = useState(INITIAL_CREDIT_USED);
 
-    triggerPinCheck(() => {
-      setBalance(prev => prev - creditUsed);
-      setCreditUsed(0);
-      addTransaction('payment', 'Pagamento Fatura Cartão', creditUsed, 'Cartão');
-      showToast('Fatura quitada com sucesso!');
-      closeModal();
-    });
-  };
+      const [activeModal, setActiveModal] = useState(null);
+      const [customBalanceInput, setCustomBalanceInput] = useState('');
+      const [customLimitInput, setCustomLimitInput] = useState('');
+      const [customInvoiceInput, setCustomInvoiceInput] = useState('');
+      const [customUserNameInput, setCustomUserNameInput] = useState('Natan');
 
-  const toggleLockCard = (cardId) => {
-    setCards(prev => prev.map(c => {
-      if (c.id === cardId) {
-        const nextState = !c.locked;
-        showToast(nextState ? `Cartão ${c.name} bloqueado.` : `Cartão ${c.name} desbloqueado.`);
-        return { ...c, locked: nextState };
-      }
-      return c;
-    }));
-  };
+      const openBalanceEditModal = () => {
+        setCustomBalanceInput(balance.toString());
+        setCustomLimitInput(creditLimit.toString());
+        setCustomInvoiceInput(creditUsed.toString());
+        setCustomUserNameInput(userName);
+        setActiveModal('edit_money');
+      };
 
-  const totalCryptoValue = useMemo(() => {
-    return cryptoList.reduce((acc, item) => acc + (item.balance * item.price), 0);
-  }, [cryptoList]);
+      const handleSaveCustomMoney = () => {
+        if (customUserNameInput.trim()) setUserName(customUserNameInput.trim());
+        if (customBalanceInput !== '') setBalance(parseFloat(customBalanceInput) || 0);
+        if (customLimitInput !== '') setCreditLimit(parseFloat(customLimitInput) || 0);
+        if (customInvoiceInput !== '') setCreditUsed(parseFloat(customInvoiceInput) || 0);
+        setActiveModal(null);
+      };
 
-  const totalCaixinhasBalance = useMemo(() => {
-    return caixinhas.reduce((acc, curr) => acc + curr.balance, 0);
-  }, [caixinhas]);
-
-  return (
-    <div className={`flex justify-center items-center min-h-screen ${darkMode ? 'bg-zinc-950 text-white' : 'bg-zinc-200 text-zinc-900'} antialiased font-sans p-0 sm:p-4 transition-colors`}>
-      
-      {/* Smartphone Outer Container (Top Status Bar Removed) */}
-      <div className={`w-full max-w-md ${darkMode ? 'bg-[#0D001A] text-white border-zinc-800' : 'bg-[#F4F4F6] text-zinc-900 border-zinc-300'} min-h-screen sm:min-h-[850px] sm:max-h-[900px] sm:rounded-[48px] shadow-2xl flex flex-col justify-between relative overflow-hidden sm:border-[8px] transition-colors`}>
-        
-        {/* Global Toast Notification */}
-        {toastMessage && (
-          <div className="absolute top-4 left-4 right-4 z-50 bg-[#820AD1] text-white p-3.5 rounded-2xl shadow-2xl flex items-center space-x-3 transition-all transform animate-bounce border border-purple-400/30">
-            <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-purple-200" />
-            <div className="text-xs font-bold leading-tight">{toastMessage}</div>
-          </div>
-        )}
-
-        {/* Clean Nubank Dynamic Header */}
-        <header className="bg-[#820AD1] text-white p-5 pt-6 rounded-b-3xl shadow-lg relative z-20">
-          <div className="flex justify-between items-center mb-5">
-            <button 
-              onClick={() => setActiveModal('profile')}
-              className="flex items-center space-x-3 group text-left"
-            >
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center font-bold text-base border border-white/30 backdrop-blur-md group-hover:scale-105 transition-transform">
-                <User className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <span className="text-[10px] text-purple-200 font-medium block leading-none">Olá,</span>
-                <h1 className="text-sm font-bold leading-tight">{userName}</h1>
-              </div>
-            </button>
-
-            <div className="flex items-center space-x-2">
-              <button 
-                onClick={() => setShowBalance(!showBalance)}
-                className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-all"
-                title={showBalance ? "Ocultar saldo" : "Mostrar saldo"}
-              >
-                {showBalance ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-              </button>
-              <button 
-                onClick={() => setActiveTab('notify')}
-                className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-all relative"
-              >
-                <Bell className="w-4 h-4" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-rose-500 rounded-full border border-[#820AD1]" />
-              </button>
-            </div>
-          </div>
-
-          {/* Account Balance Display - Click directly on the number to edit */}
-          <div className="space-y-1">
-            <div className="flex items-center space-x-1 text-purple-200 text-[11px] font-semibold uppercase tracking-wider">
-              <span>Conta</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </div>
-
-            <div 
-              onClick={openBalanceEditModal}
-              className="inline-flex items-center space-x-2 cursor-pointer group hover:opacity-90 transition-all rounded-lg p-1 -ml-1 hover:bg-white/10"
-              title="Clique para alterar a quantia"
-            >
-              <span className="text-2xl font-black tracking-tight group-hover:scale-105 transition-transform">
-                {showBalance ? formatBRL(balance) : '•••••'}
-              </span>
-              <span className="text-[10px] font-medium text-purple-200 bg-white/15 px-2 py-0.5 rounded-full">
-                +100% CDI
-              </span>
-            </div>
-          </div>
-        </header>
-
-        {/* Main App Body */}
-        <main className="flex-1 overflow-y-auto px-4 py-4 space-y-4 pb-24">
-
-          {activeTab === 'home' && (
-            <div className="space-y-4 animate-fade-in">
-
-              {/* Action Buttons Carousel */}
-              <div className="flex space-x-3 overflow-x-auto no-scrollbar py-1 -mx-4 px-4 select-none">
-                <button 
-                  onClick={() => { setActiveModal('pix'); setModalStep(1); }}
-                  className="flex flex-col items-center flex-shrink-0 group"
-                >
-                  <div className={`w-14 h-14 ${darkMode ? 'bg-zinc-800 text-white' : 'bg-zinc-200 text-zinc-900'} rounded-full flex items-center justify-center group-hover:bg-[#820AD1] group-hover:text-white transition-all shadow-sm`}>
-                    <QrCode className="w-5 h-5" />
-                  </div>
-                  <span className="text-[11px] font-semibold mt-1.5">Área Pix</span>
-                </button>
-
-                <button 
-                  onClick={() => { setActiveModal('pay'); setModalStep(1); }}
-                  className="flex flex-col items-center flex-shrink-0 group"
-                >
-                  <div className={`w-14 h-14 ${darkMode ? 'bg-zinc-800 text-white' : 'bg-zinc-200 text-zinc-900'} rounded-full flex items-center justify-center group-hover:bg-[#820AD1] group-hover:text-white transition-all shadow-sm`}>
-                    <Barcode className="w-5 h-5" />
-                  </div>
-                  <span className="text-[11px] font-semibold mt-1.5">Pagar</span>
-                </button>
-
-                <button 
-                  onClick={() => { setActiveModal('transfer'); setModalStep(1); }}
-                  className="flex flex-col items-center flex-shrink-0 group"
-                >
-                  <div className={`w-14 h-14 ${darkMode ? 'bg-zinc-800 text-white' : 'bg-zinc-200 text-zinc-900'} rounded-full flex items-center justify-center group-hover:bg-[#820AD1] group-hover:text-white transition-all shadow-sm`}>
-                    <Send className="w-5 h-5" />
-                  </div>
-                  <span className="text-[11px] font-semibold mt-1.5">Transferir</span>
-                </button>
-
-                <button 
-                  onClick={() => { setActiveModal('deposit'); setModalStep(1); }}
-                  className="flex flex-col items-center flex-shrink-0 group"
-                >
-                  <div className={`w-14 h-14 ${darkMode ? 'bg-zinc-800 text-white' : 'bg-zinc-200 text-zinc-900'} rounded-full flex items-center justify-center group-hover:bg-[#820AD1] group-hover:text-white transition-all shadow-sm`}>
-                    <ArrowDownLeft className="w-5 h-5" />
-                  </div>
-                  <span className="text-[11px] font-semibold mt-1.5">Depositar</span>
-                </button>
-
-                <button 
-                  onClick={() => setActiveModal('loan')}
-                  className="flex flex-col items-center flex-shrink-0 group"
-                >
-                  <div className={`w-14 h-14 ${darkMode ? 'bg-zinc-800 text-white' : 'bg-zinc-200 text-zinc-900'} rounded-full flex items-center justify-center group-hover:bg-[#820AD1] group-hover:text-white transition-all shadow-sm`}>
-                    <TrendingUp className="w-5 h-5" />
-                  </div>
-                  <span className="text-[11px] font-semibold mt-1.5">Empréstimo</span>
-                </button>
-              </div>
-
-              {/* Meus Cartões Card Entry */}
-              <div 
-                onClick={() => setActiveModal('my_cards')}
-                className={`${darkMode ? 'bg-zinc-900 border-zinc-800 hover:bg-zinc-800/80' : 'bg-white border-zinc-200 hover:bg-purple-50/50'} p-4 rounded-2xl shadow-sm border flex items-center justify-between cursor-pointer transition-colors`}
-              >
+      return (
+        <div className="flex justify-center items-center min-h-screen bg-zinc-950 text-white font-sans">
+          <div className="w-full max-w-md bg-[#0D001A] min-h-screen shadow-2xl flex flex-col justify-between relative overflow-hidden border-zinc-800 border">
+            
+            {/* Header */}
+            <header className="bg-[#820AD1] text-white p-5 pt-8 rounded-b-3xl shadow-lg">
+              <div className="flex justify-between items-center mb-5">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2.5 bg-purple-100 dark:bg-purple-950 text-[#820AD1] rounded-xl">
-                    <CreditCard className="w-5 h-5" />
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center font-bold">
+                    <Icon name="user" className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-xs font-bold">Meus cartões</h2>
-                    <p className="text-[10px] text-zinc-400">{cards.length} cartões ativos</p>
+                    <span className="text-[10px] text-purple-200 block">Olá,</span>
+                    <h1 className="text-sm font-bold">{userName}</h1>
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-zinc-400" />
+
+                <div className="flex space-x-2">
+                  <button onClick={() => setShowBalance(!showBalance)} className="p-2 bg-white/10 rounded-full">
+                    <Icon name={showBalance ? "eye" : "eye-off"} className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
-              {/* Credit Card Box - Fatura & Limite Clickable */}
-              <div className={`${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-100'} p-4 rounded-2xl shadow-sm border space-y-3`}>
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center space-x-2">
-                    <CreditCard className="w-4 h-4 text-[#820AD1]" />
-                    <h2 className="font-bold text-xs">Cartão de crédito</h2>
+              <div className="space-y-1">
+                <span className="text-purple-200 text-[11px] font-semibold uppercase">Conta</span>
+                <div onClick={openBalanceEditModal} className="flex items-center space-x-2 cursor-pointer hover:bg-white/10 p-1.5 rounded-xl transition-all">
+                  <span className="text-2xl font-black">{showBalance ? formatBRL(balance) : '•••••'}</span>
+                  <Icon name="edit-2" className="w-4 h-4 text-purple-200" />
+                </div>
+              </div>
+            </header>
+
+            {/* Conteúdo */}
+            <main className="flex-1 p-4 space-y-4">
+
+              {/* Botões rápidos */}
+              <div className="flex space-x-3 overflow-x-auto no-scrollbar py-2 select-none">
+                <button onClick={openBalanceEditModal} className="flex flex-col items-center flex-shrink-0">
+                  <div className="w-14 h-14 bg-zinc-800 rounded-full flex items-center justify-center">
+                    <Icon name="qr-code" className="w-5 h-5 text-white" />
                   </div>
-                  <ChevronRight className="w-4 h-4 text-zinc-400 cursor-pointer" onClick={() => setActiveModal('my_cards')} />
+                  <span className="text-[11px] font-semibold mt-1">Área Pix</span>
+                </button>
+
+                <button onClick={openBalanceEditModal} className="flex flex-col items-center flex-shrink-0">
+                  <div className="w-14 h-14 bg-zinc-800 rounded-full flex items-center justify-center">
+                    <Icon name="barcode" className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-[11px] font-semibold mt-1">Pagar</span>
+                </button>
+
+                <button onClick={openBalanceEditModal} className="flex flex-col items-center flex-shrink-0">
+                  <div className="w-14 h-14 bg-zinc-800 rounded-full flex items-center justify-center">
+                    <Icon name="send" className="w-5 h-5 text-white" />
+                  </div>
+                  <span className="text-[11px] font-semibold mt-1">Transferir</span>
+                </button>
+              </div>
+
+              {/* Cartão de Crédito */}
+              <div className="bg-zinc-900 border border-zinc-800 p-4 rounded-2xl space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-xs">Cartão de crédito</span>
+                  <Icon name="credit-card" className="w-4 h-4 text-[#820AD1]" />
                 </div>
 
                 <div>
-                  <span className="text-[11px] font-medium text-zinc-400 block">Fatura atual</span>
-                  {/* Click directly on invoice amount to edit */}
-                  <div 
-                    onClick={openBalanceEditModal}
-                    className="text-xl font-black mt-0.5 cursor-pointer hover:text-[#820AD1] inline-block transition-colors"
-                    title="Clique para alterar o valor da fatura"
-                  >
+                  <span className="text-[11px] text-zinc-400 block">Fatura atual</span>
+                  <div onClick={openBalanceEditModal} className="text-xl font-black cursor-pointer hover:text-[#820AD1]">
                     {showBalance ? formatBRL(creditUsed) : '•••••'}
                   </div>
                 </div>
 
-                {/* Credit Limit Progress - Clickable limit number */}
-                <div className="space-y-1">
-                  <div className="flex justify-between text-[10px] text-zinc-400">
-                    <span>Limite disponível</span>
-                    <span 
-                      onClick={openBalanceEditModal}
-                      className="font-bold text-zinc-300 cursor-pointer hover:text-[#820AD1] transition-colors"
-                      title="Clique para alterar o limite"
-                    >
-                      {showBalance ? formatBRL(adjustedLimit - creditUsed) : '•••••'}
-                    </span>
-                  </div>
-                  <div className="w-full bg-zinc-700/30 h-1.5 rounded-full overflow-hidden">
-                    <div 
-                      className="bg-[#820AD1] h-full transition-all duration-500" 
-                      style={{ width: `${Math.min(100, (creditUsed / Math.max(1, adjustedLimit)) * 100)}%` }}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center pt-2 border-t border-zinc-800/40">
-                  <button 
-                    onClick={() => setActiveModal('limit_adjust')}
-                    className="text-[11px] font-bold text-[#820AD1] flex items-center space-x-1"
-                  >
-                    <SlidersHorizontal className="w-3.5 h-3.5" />
-                    <span>Ajustar limite</span>
-                  </button>
-
-                  <button 
-                    onClick={handlePayInvoice}
-                    className="bg-[#820AD1] text-white px-3 py-1 rounded-full font-bold text-[11px]"
-                  >
-                    Pagar fatura
-                  </button>
-                </div>
-              </div>
-
-              {/* Caixinhas Card */}
-              <div 
-                onClick={() => setActiveModal('caixinhas')}
-                className="bg-gradient-to-br from-purple-900 via-[#820AD1] to-purple-800 text-white p-4 rounded-2xl shadow-md cursor-pointer hover:opacity-95 transition-all"
-              >
-                <div className="flex justify-between items-center mb-2">
-                  <div className="flex items-center space-x-2">
-                    <PiggyBank className="w-5 h-5 text-purple-200" />
-                    <h3 className="font-bold text-sm">Caixinhas Nubank</h3>
-                  </div>
-                  <span className="bg-purple-500/30 text-purple-100 text-[10px] px-2 py-0.5 rounded-full font-semibold border border-purple-300/20">
-                    100% CDI
+                <div className="flex justify-between text-[10px] text-zinc-400 pt-2 border-t border-zinc-800">
+                  <span>Limite disponível</span>
+                  <span onClick={openBalanceEditModal} className="font-bold text-zinc-200 cursor-pointer">
+                    {showBalance ? formatBRL(creditLimit - creditUsed) : '•••••'}
                   </span>
                 </div>
-
-                <p className="text-[11px] text-purple-100 mb-3">Guarde dinheiro com rendimento diário automático para Natan.</p>
-
-                <div className="flex justify-between items-end pt-2 border-t border-purple-400/30">
-                  <div>
-                    <span className="text-[10px] text-purple-200 uppercase tracking-wider block">Total guardado</span>
-                    <span className="text-base font-black">{showBalance ? formatBRL(totalCaixinhasBalance) : '•••••'}</span>
-                  </div>
-                  <button className="bg-white text-[#820AD1] px-3 py-1 rounded-full font-bold text-xs shadow">
-                    Ver Caixinhas
-                  </button>
-                </div>
               </div>
 
-              {/* Recent Transactions Feed */}
-              <div className={`${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-100'} p-4 rounded-2xl shadow-sm border space-y-3`}>
+              {/* Caixinhas */}
+              <div className="bg-gradient-to-r from-purple-900 to-[#820AD1] p-4 rounded-2xl space-y-2">
                 <div className="flex justify-between items-center">
-                  <h3 className="font-bold text-xs">Histórico recente</h3>
-                  <button onClick={() => setActiveModal('search')} className="text-[11px] font-bold text-[#820AD1]">Buscar</button>
+                  <h3 className="font-bold text-sm">Caixinhas Nubank</h3>
+                  <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full">100% CDI</span>
                 </div>
-
-                <div className="divide-y divide-zinc-800/40">
-                  {transactions.slice(0, 4).map(tx => (
-                    <div 
-                      key={tx.id} 
-                      onClick={() => { setSelectedTx(tx); setActiveModal('tx_detail'); }}
-                      className="py-2.5 flex items-center justify-between hover:bg-white/5 px-1 rounded-xl cursor-pointer"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className={`p-2 rounded-full ${
-                          tx.type === 'pix_received' || tx.type === 'yield' || tx.type === 'cashback'
-                            ? 'bg-emerald-500/10 text-emerald-500' 
-                            : 'bg-zinc-800 text-zinc-300'
-                        }`}>
-                          {tx.type === 'pix_received' && <ArrowDownLeft className="w-3.5 h-3.5" />}
-                          {tx.type === 'pix_sent' && <ArrowUpRight className="w-3.5 h-3.5" />}
-                          {tx.type === 'card_buy' && <CreditCard className="w-3.5 h-3.5" />}
-                          {tx.type === 'payment' && <Barcode className="w-3.5 h-3.5" />}
-                          {tx.type === 'yield' && <Sparkles className="w-3.5 h-3.5" />}
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold line-clamp-1">{tx.title}</p>
-                          <p className="text-[10px] text-zinc-400">{tx.date} • {tx.category}</p>
-                        </div>
-                      </div>
-
-                      <p className={`text-xs font-bold ${
-                        tx.type === 'pix_received' || tx.type === 'yield' || tx.type === 'cashback' || tx.type === 'loan'
-                          ? 'text-emerald-500' 
-                          : 'text-zinc-200'
-                      }`}>
-                        {tx.type === 'pix_received' || tx.type === 'yield' || tx.type === 'cashback' || tx.type === 'loan' ? '+' : '-'} {formatBRL(tx.value)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+                <p className="text-xs text-purple-100">Guarde dinheiro com rendimento automático para {userName}.</p>
+                <div className="text-lg font-black pt-1">{showBalance ? formatBRL(8700.00) : '•••••'}</div>
               </div>
 
-            </div>
-          )}
+            </main>
 
-          {activeTab === 'invest' && (
-            <div className="space-y-4 animate-fade-in">
-              <div className={`${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-100'} p-4 rounded-2xl border space-y-2`}>
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Patrimônio de Natan</span>
-                <div className="text-2xl font-black">
-                  {showBalance ? formatBRL(totalCaixinhasBalance + totalCryptoValue) : '•••••'}
-                </div>
-              </div>
+            {/* Modal Editar Valores */}
+            {activeModal === 'edit_money' && (
+              <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+                <div className="bg-zinc-900 w-full max-w-sm rounded-3xl p-5 space-y-4 border border-purple-500/30">
+                  <h3 className="font-bold text-base text-purple-300">Alterar Valores de {userName}</h3>
+                  
+                  <div className="space-y-2">
+                    <label className="text-xs text-zinc-300 block">Nome</label>
+                    <input type="text" value={customUserNameInput} onChange={(e) => setCustomUserNameInput(e.target.value)} className="w-full p-2.5 bg-zinc-800 rounded-xl text-xs border border-zinc-700 outline-none" />
 
-              <div className={`${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-100'} p-4 rounded-2xl border space-y-3`}>
-                <div className="flex justify-between items-center">
-                  <h3 className="font-bold text-xs flex items-center space-x-1.5">
-                    <PiggyBank className="w-4 h-4 text-[#820AD1]" />
-                    <span>Caixinhas</span>
-                  </h3>
-                  <button onClick={() => setActiveModal('caixinhas')} className="text-[11px] text-[#820AD1] font-bold">Ver tudo</button>
-                </div>
+                    <label className="text-xs text-zinc-300 block">Saldo (R$)</label>
+                    <input type="number" value={customBalanceInput} onChange={(e) => setCustomBalanceInput(e.target.value)} className="w-full p-2.5 bg-zinc-800 rounded-xl text-xs border border-zinc-700 outline-none text-emerald-400 font-bold" />
 
-                <div className="space-y-2">
-                  {caixinhas.map(c => (
-                    <div key={c.id} className={`${darkMode ? 'bg-zinc-800/50' : 'bg-zinc-50'} p-3 rounded-xl flex justify-between items-center`}>
-                      <div>
-                        <p className="text-xs font-bold">{c.name}</p>
-                        <p className="text-[10px] text-zinc-400">Meta: {formatBRL(c.goal)}</p>
-                      </div>
-                      <span className="text-xs font-black">{showBalance ? formatBRL(c.balance) : '•••••'}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+                    <label className="text-xs text-zinc-300 block">Limite (R$)</label>
+                    <input type="number" value={customLimitInput} onChange={(e) => setCustomLimitInput(e.target.value)} className="w-full p-2.5 bg-zinc-800 rounded-xl text-xs border border-zinc-700 outline-none" />
 
-          {activeTab === 'shop' && (
-            <div className="space-y-4 animate-fade-in">
-              <div className="bg-gradient-to-r from-purple-900 to-[#820AD1] text-white p-4 rounded-2xl space-y-1">
-                <div className="flex items-center space-x-2">
-                  <ShoppingBag className="w-5 h-5 text-purple-200" />
-                  <h2 className="text-base font-black">Shopping Nubank</h2>
-                </div>
-                <p className="text-xs text-purple-100">
-                  Compre e receba <strong>cashback direto na conta de Natan</strong>!
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                {SHOPPING_STORES.map(store => (
-                  <div 
-                    key={store.id} 
-                    onClick={() => { setSelectedStore(store); setActiveModal('shop_buy'); }}
-                    className={`${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-200'} p-3.5 rounded-2xl border flex items-center justify-between cursor-pointer`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-10 h-10 ${store.logoBg} rounded-xl flex items-center justify-center text-white font-bold text-xs`}>
-                        {store.name.slice(0, 2).toUpperCase()}
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-bold">{store.name}</h4>
-                        <p className="text-[10px] text-emerald-500 font-bold">{store.deal}</p>
-                      </div>
-                    </div>
-                    <span className="bg-emerald-500/10 text-emerald-500 text-xs font-black px-2.5 py-1 rounded-full border border-emerald-500/20">
-                      {store.cashback}% Cashback
-                    </span>
+                    <label className="text-xs text-zinc-300 block">Fatura (R$)</label>
+                    <input type="number" value={customInvoiceInput} onChange={(e) => setCustomInvoiceInput(e.target.value)} className="w-full p-2.5 bg-zinc-800 rounded-xl text-xs border border-zinc-700 outline-none text-rose-400" />
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
 
-          {activeTab === 'notify' && (
-            <div className="space-y-3 animate-fade-in">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Notificações de Natan</h3>
-              <div className={`${darkMode ? 'bg-zinc-900 border-zinc-800' : 'bg-white border-zinc-100'} p-4 rounded-2xl border space-y-1`}>
-                <span className="text-xs font-bold text-[#820AD1]">Bem-vindo Natan!</span>
-                <p className="text-xs text-zinc-400">Você agora pode alterar qualquer valor simplesmente clicando em cima do número!</p>
-              </div>
-            </div>
-          )}
-
-        </main>
-
-        {/* Bottom Navigation */}
-        <nav className={`${darkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-white border-zinc-200'} border-t absolute bottom-0 left-0 right-0 max-w-md mx-auto flex justify-around py-2.5 px-2 z-30 select-none`}>
-          <button 
-            onClick={() => setActiveTab('home')}
-            className={`flex flex-col items-center space-y-1 ${activeTab === 'home' ? 'text-[#820AD1]' : 'text-zinc-500'}`}
-          >
-            <Home className="w-5 h-5" />
-            <span className="text-[10px] font-bold">Início</span>
-          </button>
-
-          <button 
-            onClick={() => setActiveTab('invest')}
-            className={`flex flex-col items-center space-y-1 ${activeTab === 'invest' ? 'text-[#820AD1]' : 'text-zinc-500'}`}
-          >
-            <DollarSign className="w-5 h-5" />
-            <span className="text-[10px] font-bold">Investir</span>
-          </button>
-
-          <button 
-            onClick={() => setActiveTab('shop')}
-            className={`flex flex-col items-center space-y-1 ${activeTab === 'shop' ? 'text-[#820AD1]' : 'text-zinc-500'}`}
-          >
-            <ShoppingBag className="w-5 h-5" />
-            <span className="text-[10px] font-bold">Shopping</span>
-          </button>
-
-          <button 
-            onClick={() => setActiveTab('notify')}
-            className={`flex flex-col items-center space-y-1 ${activeTab === 'notify' ? 'text-[#820AD1]' : 'text-zinc-500'}`}
-          >
-            <Bell className="w-5 h-5" />
-            <span className="text-[10px] font-bold">Avisos</span>
-          </button>
-        </nav>
-
-        {/* CLICK-TO-EDIT MONEY MODAL */}
-        {activeModal === 'edit_money' && (
-          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center animate-fade-in p-4">
-            <div className={`${darkMode ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900'} w-full max-w-md rounded-3xl p-6 space-y-4 shadow-2xl border border-purple-500/30`}>
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-2">
-                  <Edit2 className="w-5 h-5 text-[#820AD1]" />
-                  <h3 className="font-bold text-base">Definir Quantia Desejada</h3>
-                </div>
-                <button onClick={closeModal} className="p-1.5 bg-zinc-800/40 rounded-full"><X className="w-4 h-4" /></button>
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs font-bold text-purple-300 block mb-1">Seu Nome no App</label>
-                  <input 
-                    type="text" 
-                    value={customUserNameInput}
-                    onChange={(e) => setCustomUserNameInput(e.target.value)}
-                    className="w-full p-3 bg-zinc-800/60 rounded-xl text-sm font-bold border border-zinc-700 outline-none focus:border-[#820AD1]"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-emerald-400 block mb-1">Saldo da Conta Principal (R$)</label>
-                  <input 
-                    type="number" 
-                    value={customBalanceInput}
-                    onChange={(e) => setCustomBalanceInput(e.target.value)}
-                    placeholder="Ex: 5000"
-                    className="w-full p-3 bg-zinc-800/60 rounded-xl text-base font-black text-emerald-400 border border-zinc-700 outline-none focus:border-[#820AD1]"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-purple-300 block mb-1">Limite do Cartão de Crédito (R$)</label>
-                  <input 
-                    type="number" 
-                    value={customLimitInput}
-                    onChange={(e) => setCustomLimitInput(e.target.value)}
-                    placeholder="Ex: 10000"
-                    className="w-full p-3 bg-zinc-800/60 rounded-xl text-sm font-bold border border-zinc-700 outline-none focus:border-[#820AD1]"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-rose-400 block mb-1">Fatura Atual do Cartão (R$)</label>
-                  <input 
-                    type="number" 
-                    value={customInvoiceInput}
-                    onChange={(e) => setCustomInvoiceInput(e.target.value)}
-                    placeholder="Ex: 1200"
-                    className="w-full p-3 bg-zinc-800/60 rounded-xl text-sm font-bold border border-zinc-700 outline-none focus:border-[#820AD1]"
-                  />
-                </div>
-              </div>
-
-              <button 
-                onClick={handleSaveCustomMoney}
-                className="w-full bg-[#820AD1] hover:bg-purple-700 text-white py-3.5 rounded-full font-bold text-xs shadow-lg transition-all"
-              >
-                Salvar Valores
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* SECURITY PIN LOCK */}
-        {activeModal === 'pin_lock' && (
-          <div className="fixed inset-0 bg-black/80 z-50 flex items-end sm:items-center justify-center animate-fade-in p-4">
-            <div className={`${darkMode ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900'} w-full max-w-sm rounded-3xl p-6 text-center space-y-6 shadow-2xl`}>
-              <div className="w-12 h-12 bg-purple-500/10 text-[#820AD1] rounded-full flex items-center justify-center mx-auto">
-                <Lock className="w-6 h-6" />
-              </div>
-
-              <div>
-                <h3 className="font-bold text-base">Digite sua senha, Natan</h3>
-                <p className="text-xs text-zinc-400 mt-1">Digite 4 dígitos para confirmar</p>
-              </div>
-
-              <div className="flex justify-center space-x-4">
-                {[0, 1, 2, 3].map(idx => (
-                  <div 
-                    key={idx} 
-                    className={`w-4 h-4 rounded-full border-2 border-[#820AD1] ${pinInput[idx] ? 'bg-[#820AD1]' : 'bg-transparent'}`}
-                  />
-                ))}
-              </div>
-
-              <div className="grid grid-cols-3 gap-3 pt-2">
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(num => (
-                  <button 
-                    key={num} 
-                    onClick={() => handlePinDigit(num.toString())}
-                    className="p-3 bg-zinc-800/40 hover:bg-zinc-800 rounded-2xl font-black text-lg active:scale-95 transition-all"
-                  >
-                    {num}
-                  </button>
-                ))}
-                <button onClick={() => setPinInput(['', '', '', ''])} className="p-3 text-xs text-rose-500 font-bold">Limpar</button>
-                <button 
-                  onClick={() => handlePinDigit('0')}
-                  className="p-3 bg-zinc-800/40 hover:bg-zinc-800 rounded-2xl font-black text-lg active:scale-95 transition-all"
-                >
-                  0
-                </button>
-                <button onClick={closeModal} className="p-3 text-xs text-zinc-400 font-bold">Cancelar</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* PIX MODAL */}
-        {activeModal === 'pix' && (
-          <div className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center animate-fade-in p-0 sm:p-4">
-            <div className={`${darkMode ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900'} w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[85vh] overflow-y-auto`}>
-              <div className="flex justify-between items-center">
-                <h3 className="font-bold text-base">Área Pix</h3>
-                <button onClick={closeModal} className="p-1.5 bg-zinc-800/40 rounded-full"><X className="w-4 h-4" /></button>
-              </div>
-
-              {modalStep === 1 && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <button onClick={() => setModalStep(2)} className="p-3.5 bg-zinc-800/40 rounded-2xl border border-zinc-800 text-left space-y-1.5">
-                      <Send className="w-5 h-5 text-[#820AD1]" />
-                      <div className="font-bold text-xs">Transferir Pix</div>
-                    </button>
-                    <button onClick={() => setModalStep(3)} className="p-3.5 bg-zinc-800/40 rounded-2xl border border-zinc-800 text-left space-y-1.5">
-                      <QrCode className="w-5 h-5 text-[#820AD1]" />
-                      <div className="font-bold text-xs">Receber QR Code</div>
-                    </button>
+                  <div className="flex space-x-2 pt-2">
+                    <button onClick={() => setActiveModal(null)} className="w-1/2 bg-zinc-800 py-2.5 rounded-full text-xs font-bold">Cancelar</button>
+                    <button onClick={handleSaveCustomMoney} className="w-1/2 bg-[#820AD1] py-2.5 rounded-full text-xs font-bold">Salvar</button>
                   </div>
                 </div>
-              )}
-
-              {modalStep === 2 && (
-                <div className="space-y-3">
-                  <input 
-                    type="text" 
-                    value={pixKeyInput}
-                    onChange={(e) => setPixKeyInput(e.target.value)}
-                    placeholder="Informe a chave Pix" 
-                    className="w-full p-3 bg-zinc-800/40 rounded-xl text-xs outline-none border border-zinc-700"
-                  />
-                  <button 
-                    disabled={!pixKeyInput}
-                    onClick={() => setModalStep(4)}
-                    className="w-full bg-[#820AD1] text-white py-3 rounded-full font-bold text-xs disabled:opacity-50"
-                  >
-                    Avançar
-                  </button>
-                </div>
-              )}
-
-              {modalStep === 4 && (
-                <div className="space-y-3">
-                  <span className="text-xs font-bold">Valor para enviar:</span>
-                  <input 
-                    type="number" 
-                    value={amountInput}
-                    onChange={(e) => setAmountInput(e.target.value)}
-                    placeholder="0,00" 
-                    className="w-full p-3 bg-zinc-800/40 rounded-xl text-xl font-black outline-none border border-zinc-700"
-                  />
-                  <button 
-                    disabled={!amountInput || parseFloat(amountInput) <= 0}
-                    onClick={handlePixSendConfirmed}
-                    className="w-full bg-[#820AD1] text-white py-3 rounded-full font-bold text-xs disabled:opacity-50"
-                  >
-                    Transferir com Senha PIN
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* MEUS CARTÕES MODAL */}
-        {activeModal === 'my_cards' && (
-          <div className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center animate-fade-in p-0 sm:p-4">
-            <div className={`${darkMode ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-900'} w-full max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4 max-h-[85vh] overflow-y-auto`}>
-              <div className="flex justify-between items-center">
-                <h3 className="font-bold text-base">Cartões de Natan</h3>
-                <button onClick={closeModal} className="p-1.5 bg-zinc-800/40 rounded-full"><X className="w-4 h-4" /></button>
               </div>
+            )}
 
-              <div className="space-y-3">
-                {cards.map(card => (
-                  <div key={card.id} className={`p-4 rounded-2xl bg-gradient-to-br ${card.color} text-white space-y-3 shadow-md`}>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <span className="text-[9px] font-bold tracking-widest uppercase text-purple-200">{card.tag}</span>
-                        <h4 className="font-bold text-xs">{card.name}</h4>
-                      </div>
-                      <CreditCard className="w-5 h-5 text-purple-200" />
-                    </div>
-
-                    <div className="flex justify-between items-end">
-                      <div>
-                        <p className="font-mono text-xs tracking-wider">{card.number}</p>
-                        <p className="text-[9px] text-zinc-300 mt-0.5">Val: {card.expiry} • CVV: {card.cvv}</p>
-                      </div>
-
-                      <button 
-                        onClick={() => toggleLockCard(card.id)}
-                        className="p-1.5 bg-white/20 rounded-full"
-                      >
-                        {card.locked ? <Lock className="w-3.5 h-3.5 text-rose-300" /> : <Unlock className="w-3.5 h-3.5 text-emerald-300" />}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
-        )}
+        </div>
+      );
+    }
 
-      </div>
-    </div>
-  );
-}
-```
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
